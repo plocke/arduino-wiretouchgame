@@ -23,15 +23,14 @@ const boolean DEBUG_SERIAL = true;
 
 //analog user button inputs.  we are just using them for digital reads
 const int PIN_NEWGAMEBUTTON = A0;
-const int PIN_WAND = A1;
-const int PIN_STARTCRADLE = A2;
-const int PIN_GAMEWIRE = A3;
+const int PIN_STARTCRADLE = A1;
+const int PIN_GAMEWIRE = A2;
 
 //output pins
-const int PIN_GOING_LED_GREEN = 6; //PWM Pin
-const int PIN_YELLOW_LED = 7;
-const int PIN_FAILED_LED= 8;
-const int PIN_SPEAKER = 9;
+const int PIN_GOING_LED_GREEN = 3; //PWM Pin
+const int PIN_YELLOW_LED = 4;
+const int PIN_FAILED_LED= 2;
+const int PIN_SPEAKER = 5;
 
 //global variables
 extern int state;
