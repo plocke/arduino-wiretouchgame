@@ -11,7 +11,8 @@ long countDownTimer;
 long gameOverDisplayTimer;
 int currentCountDownStep;
 long debounceTimer;
-int lastDebouncePinState = -1;
+int lastDebouncePinState;
+long winTimeMillis;
 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
@@ -22,6 +23,9 @@ void resetVariables() {
  countDownTimer = 0L;
  gameOverDisplayTimer = 0L;
  currentCountDownStep = COUNTDOWN_NUMSTEPS;
+ debounceTimer = 0L;
+ lastDebouncePinState = -1;
+ winTimeMillis = -1;
 }
 
 void testLEDPin(int ledPIN)
@@ -37,6 +41,13 @@ long getElapsedMillisForTimerVariable(long timerVariable) {
 
 int getElapsedSecondsForTImerVariable(long timerVariable) {
   return getElapsedMillisForTimerVariable(timerVariable)/1000;
+}
+
+void updateLCDBottomLineWithElapsedTime(long timerVariable) {
+   if (getElapsedMillisForTimerVariable(timerVariable) % 100 == 0)
+    {
+      setBottomLine(String(getElapsedSecondsForTImerVariable(timerVariable))+"."+String((getElapsedMillisForTimerVariable(timerVariable)-getElapsedSecondsForTImerVariable(timerVariable)*1000L)/100L)+"s", lcd);
+    }
 }
 
 
@@ -55,6 +66,7 @@ void transitionToState(int newState) {
 
    case STATE_COUNTDOWN:
     lcd.clear();
+    noTone(PIN_SPEAKER);
     setTopLine("Get Ready!", lcd);
     currentCountDownStep = COUNTDOWN_NUMSTEPS;
     setBottomLine("In "+String(currentCountDownStep), lcd);
@@ -68,10 +80,17 @@ void transitionToState(int newState) {
     break;
 
   case STATE_WIN:
-    /* code */
+    winTimeMillis = millis() - timeSinceStartTimer;
+    gameOverDisplayTimer = millis();
+    setTopLine("Winner! Time:", lcd);
+      for (int i = 0; i<NUM_SUCCESS_NOTES; i++){
+        tone(PIN_SPEAKER, NOTE_FREQUENCY_SUCCESS_ARRAY[i], SUCCESS_TONE_LENGTH_MS);
+        delay(SUCCESS_TONE_LENGTH_MS);
+      }
     break;
 
   case STATE_FAILED:
+    tone(PIN_SPEAKER, NOTE_FREQUENCY_FAIL, ERROR_TONE_LENGTH_MILLIS);
     gameOverDisplayTimer = millis();
     break;
 
@@ -82,11 +101,8 @@ void transitionToState(int newState) {
   }
 
   Serial.println("Transitioning state "+String(currentState)+" to "+String(newState));
+  Serial.println("game time elapsed is "+String(millis()-timeSinceStartTimer));
   currentState = newState;
-
-
-
-  
 }
 
 void setup() {
@@ -125,14 +141,20 @@ void loop() {
       transitionToState(STATE_FAILED);
     }
 
-    if (getElapsedMillisForTimerVariable(timeSinceStartTimer) % 100 == 0)
-    {
-      setBottomLine(String(getElapsedSecondsForTImerVariable(timeSinceStartTimer))+"."+String((getElapsedMillisForTimerVariable(timeSinceStartTimer)-getElapsedSecondsForTImerVariable(timeSinceStartTimer)*1000L)/100L), lcd);
+    updateLCDBottomLineWithElapsedTime(timeSinceStartTimer);
+
+    if(digitalRead(PIN_WINCRADLE) == HIGH) {
+      transitionToState(STATE_WIN);
     }
     break;
 
   case STATE_WIN:
-    /* code */
+  if (digitalRead(PIN_STARTCRADLE) == HIGH) {
+        transitionToState(STATE_COUNTDOWN);
+      }
+        if(getElapsedSecondsForTImerVariable(gameOverDisplayTimer) > 5) {
+          transitionToState(STATE_WAITING_TO_START);
+        }
     break;
 
   case STATE_FAILED:
@@ -140,8 +162,8 @@ void loop() {
         transitionToState(STATE_COUNTDOWN);
       }
         if(getElapsedSecondsForTImerVariable(gameOverDisplayTimer) > 5) {
-      transitionToState(STATE_WAITING_TO_START);
-    }
+          transitionToState(STATE_WAITING_TO_START);
+        }
     break;
 
   case STATE_COUNTDOWN:

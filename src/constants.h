@@ -26,6 +26,7 @@ const boolean DEBUG_SERIAL = true;
 const int PIN_NEWGAMEBUTTON = A0;
 const int PIN_STARTCRADLE = A1;
 const int PIN_GAMEWIRE = A2;
+const int PIN_WINCRADLE = A3;
 
 //output pins
 const int PIN_GOING_LED_GREEN = 9; //PWM Pin
@@ -36,7 +37,8 @@ const int PIN_SPEAKER = 13;
 
 //sound constants
 const int NOTE_FREQUENCY_FAIL = 80;
-const int NOTE_FREQUENCY_SUCCESS_ARRAY[] = {200,300,400};
+const int NUM_SUCCESS_NOTES = 3;
+const int NOTE_FREQUENCY_SUCCESS_ARRAY[] = {300,400,500};
 
 
 //timing constants
