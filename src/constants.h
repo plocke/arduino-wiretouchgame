@@ -31,14 +31,16 @@ const int PIN_WINCRADLE = A3;
 //output pins
 const int PIN_GOING_LED_GREEN = 9; //PWM Pin
 const int PIN_YELLOW_LED = 10;
-const int PIN_FAILED_LED= 8;
+const int PIN_RED_LED= 8;
 const int PIN_SPEAKER = 13;
+const int COUNTDOWN_LIGHT_PINS[] = {PIN_GOING_LED_GREEN, PIN_YELLOW_LED, PIN_RED_LED};
 
 
 //sound constants
 const int NOTE_FREQUENCY_FAIL = 80;
 const int NUM_SUCCESS_NOTES = 3;
 const int NOTE_FREQUENCY_SUCCESS_ARRAY[] = {300,400,500};
+const int NOTE_FREQUENCY_COUNTDOWN_ARRAY[] = {650, 250, 250, 250};
 
 
 //timing constants

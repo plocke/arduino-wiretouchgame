@@ -35,6 +35,24 @@ void testLEDPin(int ledPIN)
   digitalWrite(ledPIN, LOW);
 }
 
+void lightOneLEDOnlyInCountdown(int countdownStep) {
+  int ledPIN = COUNTDOWN_LIGHT_PINS[countdownStep];
+  Serial.println("Lighting LEDPin "+String(ledPIN)+ " for countdown step "+String(countdownStep));
+  for (int i = 0; i < COUNTDOWN_NUMSTEPS; i++)
+  {
+    if (i == countdownStep) {
+      digitalWrite(ledPIN, HIGH);
+    } else {
+      digitalWrite(COUNTDOWN_LIGHT_PINS[i], LOW);
+    }
+  }
+}
+
+void playSoundForCountdownStep(int countDownStep) {
+  int toneLength = (countDownStep == 0) ? COUNTDOWN_STEPLENGTH_MS : COUNTDOWN_STEPLENGTH_MS/4; 
+  tone(PIN_SPEAKER, NOTE_FREQUENCY_COUNTDOWN_ARRAY[countDownStep],toneLength );
+}
+
 long getElapsedMillisForTimerVariable(long timerVariable) {
   return millis() - timerVariable;
 }
@@ -69,8 +87,7 @@ void transitionToState(int newState) {
     noTone(PIN_SPEAKER);
     setTopLine("Get Ready!", lcd);
     currentCountDownStep = COUNTDOWN_NUMSTEPS;
-    setBottomLine("In "+String(currentCountDownStep), lcd);
-    countDownTimer = millis();
+    //countDownTimer = millis();
     break;
 
   case STATE_GOING:
@@ -91,6 +108,11 @@ void transitionToState(int newState) {
 
   case STATE_FAILED:
     tone(PIN_SPEAKER, NOTE_FREQUENCY_FAIL, ERROR_TONE_LENGTH_MILLIS);
+    for (int i = 0; i < COUNTDOWN_NUMSTEPS; i++){
+        digitalWrite(COUNTDOWN_LIGHT_PINS[i], LOW);
+    }
+    
+    
     gameOverDisplayTimer = millis();
     break;
 
@@ -115,7 +137,7 @@ lcd.begin(16,2);
     pinMode(i, OUTPUT);
   }
 
-  testLEDPin(PIN_FAILED_LED);
+  testLEDPin(PIN_RED_LED);
   testLEDPin(PIN_YELLOW_LED);
   testLEDPin(PIN_GOING_LED_GREEN);
   tone(PIN_SPEAKER, 523);
@@ -173,12 +195,12 @@ void loop() {
       debounceTimer = millis();
       lastDebouncePinState = currentStartPinState;
 
-      Serial.println("In Debounce. Pinstate is "+String(currentStartPinState)+" lastPinState is "+String(lastDebouncePinState));
+      //Serial.println("In Debounce. Pinstate is "+String(currentStartPinState)+" lastPinState is "+String(lastDebouncePinState));
     }
 
     if ((millis() - debounceTimer) > DEBOUNCE_THRESHOLD_MS)
     {
-      Serial.println("In Debounce Else. Pinstate is "+String(currentStartPinState)+" lastPinState is "+String(lastDebouncePinState));
+     // Serial.println("In Debounce Else. Pinstate is "+String(currentStartPinState)+" lastPinState is "+String(lastDebouncePinState));
 
       if( currentStartPinState == LOW) { //started too early
         setBothLCDLines("** DISQUALIFIED ** ","Started too early", lcd);
@@ -186,11 +208,13 @@ void loop() {
       }
     }
 
-    Serial.println("millis minus debounce is "+(String)(millis() - debounceTimer));
+    //Serial.println("millis minus debounce is "+(String)(millis() - debounceTimer));
 
-    if (getElapsedMillisForTimerVariable(countDownTimer) > COUNTDOWN_STEPLENGTH_MS) {
+    if (countDownTimer == 0 || (getElapsedMillisForTimerVariable(countDownTimer) > COUNTDOWN_STEPLENGTH_MS)) {
       countDownTimer = millis();
       currentCountDownStep --;
+      playSoundForCountdownStep(currentCountDownStep);
+      lightOneLEDOnlyInCountdown(currentCountDownStep);
       setBottomLine("In "+String(currentCountDownStep), lcd);
     }
     
